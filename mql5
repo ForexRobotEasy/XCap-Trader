@@ -1,0 +1,62 @@
+
+// XCap Trader
+// Developer: Forex Robot Easy Team
+// Developer's Site: forexroboteasy.com
+
+// Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Arrays\ArrayObj.mqh>
+
+// Define constants
+#define MAX_TRADE_COUNT 100
+#define MAX_LOT_SIZE 0.01
+#define STOP_LOSS 50
+#define TAKE_PROFIT 100
+
+// Define global variables
+CTrade trade;
+CArrayObj trades;
+
+// Initialization function
+int OnInit()
+{
+    // Initialize trade object
+    trade.SetDeviationInPoints(10);
+    trade.SetExpertMagicNumber(123456);
+
+    // Initialize trades array
+    trades.Resize(MAX_TRADE_COUNT);
+    trades.Free();
+
+    return(INIT_SUCCEEDED);
+}
+
+// Deinitialization function
+void OnDeinit(const int reason)
+{
+    // Close all open trades
+    for(int i = 0; i < trades.Total(); i++)
+    {
+        trade.Close(trades.At(i));
+    }
+}
+
+// Entry point function
+void OnTick()
+{
+    // Check if there are any open trades
+    if(trades.Total() < MAX_TRADE_COUNT)
+    {
+        // Open a new trade in both directions
+        double lotSize = MathRand() % MAX_LOT_SIZE + 0.01;
+        double stopLoss = NormalizeDouble(Bid - STOP_LOSS * Point, Digits);
+        double takeProfit = NormalizeDouble(Ask + TAKE_PROFIT * Point, Digits);
+
+        int buyTicket = trade.Buy(lotSize, Symbol(), 0, 0, stopLoss, takeProfit);
+        int sellTicket = trade.Sell(lotSize, Symbol(), 0, 0, stopLoss, takeProfit);
+
+        // Add trade tickets to the trades array
+        trades.Add(buyTicket);
+        trades.Add(sellTicket);
+    }
+}
